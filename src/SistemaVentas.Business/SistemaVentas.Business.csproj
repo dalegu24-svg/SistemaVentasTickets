@@ -1,0 +1,11 @@
+namespace SistemaVentas.Data;
+
+public static class SqlServerConnection
+{
+    public static string GetConnectionString(
+        string server = "(localdb)\\MSSQLLocalDB",
+        string database = "SistemaVentasDb")
+    {
+        return $"Server={server};Database={database};Trusted_Connection=True;TrustServerCertificate=True;";
+    }
+}

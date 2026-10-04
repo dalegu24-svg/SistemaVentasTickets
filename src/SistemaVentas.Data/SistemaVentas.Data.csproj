@@ -1,0 +1,10 @@
+namespace SistemaVentas.Common.Models;
+
+public class Ticket : BaseEntity
+{
+    public int VentaId { get; set; }
+    public string NumeroTicket { get; set; } = string.Empty;
+    public DateTime FechaEmision { get; set; } = DateTime.Now;
+    public string? TextoTicket { get; set; }
+    public bool Impreso { get; set; }
+}

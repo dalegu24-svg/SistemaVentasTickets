@@ -1,0 +1,58 @@
+using SistemaVentas.Common.Models;
+
+namespace SistemaVentas.Business.Services;
+
+public class VentaService
+{
+    private readonly ProductoService _productoService = new();
+
+    public Venta CrearVenta(int usuarioId, int? clienteId, List<DetalleVenta> detalles, decimal igvPorcentaje = 18m)
+    {
+        if (detalles == null || detalles.Count == 0)
+            throw new InvalidOperationException("Debe agregar al menos un producto a la venta.");
+
+        var venta = new Venta
+        {
+            UsuarioId = usuarioId,
+            ClienteId = clienteId,
+            Estado = "Pendiente",
+            TipoComprobante = "Factura",
+            Detalles = detalles
+        };
+
+        foreach (var detalle in detalles)
+        {
+            var producto = _productoService.ObtenerPorCodigo(GetCodigoProducto(detalle.ProductoId));
+            if (producto is null)
+                throw new InvalidOperationException($"El producto con Id {detalle.ProductoId} no existe.");
+
+            if (detalle.Cantidad <= 0)
+                throw new InvalidOperationException("La cantidad debe ser mayor que cero.");
+
+            if (detalle.Cantidad > producto.Stock)
+                throw new InvalidOperationException($"No hay stock suficiente para {producto.Nombre}.");
+
+            detalle.SubTotal = detalle.Cantidad * detalle.PrecioUnitario;
+            venta.SubTotal += detalle.SubTotal;
+        }
+
+        venta.Igv = Math.Round(venta.SubTotal * (igvPorcentaje / 100m), 2);
+        venta.Total = venta.SubTotal + venta.Igv;
+        venta.NumeroDocumento = Guid.NewGuid().ToString()[..8].ToUpper();
+
+        return venta;
+    }
+
+    private static string GetCodigoProducto(int productoId)
+    {
+        return productoId switch
+        {
+            1 => "B001",
+            2 => "B002",
+            3 => "S001",
+            4 => "L001",
+            5 => "H001",
+            _ => string.Empty
+        };
+    }
+}

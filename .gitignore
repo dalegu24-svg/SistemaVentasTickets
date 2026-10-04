@@ -1,0 +1,45 @@
+# Diagrama de entidades del sistema de ventas
+
+## Entidades principales
+
+- Usuario
+- Cliente
+- Categoria
+- Producto
+- Venta
+- DetalleVenta
+- Factura
+- Ticket
+
+## Relación general
+
+- Un usuario puede registrar muchas ventas.
+- Un cliente puede tener muchas ventas.
+- Una categoría tiene muchos productos.
+- Una venta tiene muchos detalles.
+- Una venta genera una factura.
+- Una venta genera un ticket.
+
+## Modelo conceptual
+
+```text
+Usuario 1 --- * Venta
+Cliente 1 --- * Venta
+Categoria 1 --- * Producto
+Venta 1 --- * DetalleVenta
+Producto 1 --- * DetalleVenta
+Venta 1 --- 1 Factura
+Venta 1 --- 1 Ticket
+```
+
+## Recomendación
+
+La estructura actual del proyecto y la base de datos están diseñadas para crecer hacia reportes por día, mes, producto y cliente.
+
+## Siguientes pasos
+
+- Agregar módulo de reportes RDLC
+- Agregar permisos por rol de usuario
+- Agregar historial de ventas
+- Añadir impresión de tickets térmicos y PDF
+- Generar edición del stock al vender
