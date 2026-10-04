@@ -4,72 +4,31 @@ using SistemaVentas.Common.Models;
 
 namespace SistemaVentas.Data.Repositories;
 
-public class ProductoRepository
+public class VentaRepository
 {
-    public List<Producto> ObtenerProductos()
-    {
-        var productos = new List<Producto>();
-
-        using var connection = new SqlConnection(SqlServerConnection.ConnectionString);
-        using var command = new SqlCommand(
-            @"SELECT Id, Codigo, Nombre, Descripcion, CategoriaId, PrecioCompra, PrecioVenta, Stock, StockMinimo, Activo, CreatedAt
-              FROM dbo.Productos
-              WHERE Activo = 1
-              ORDER BY Nombre;",
-            connection);
-
-        connection.Open();
-
-        using var reader = command.ExecuteReader();
-        while (reader.Read())
-        {
-            productos.Add(new Producto
-            {
-                Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                Codigo = reader.GetString(reader.GetOrdinal("Codigo")),
-                Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
-                Descripcion = reader.IsDBNull(reader.GetOrdinal("Descripcion")) ? null : reader.GetString(reader.GetOrdinal("Descripcion")),
-                CategoriaId = reader.GetInt32(reader.GetOrdinal("CategoriaId")),
-                PrecioCompra = reader.GetDecimal(reader.GetOrdinal("PrecioCompra")),
-                PrecioVenta = reader.GetDecimal(reader.GetOrdinal("PrecioVenta")),
-                Stock = reader.GetInt32(reader.GetOrdinal("Stock")),
-                StockMinimo = reader.GetInt32(reader.GetOrdinal("StockMinimo")),
-                Activo = reader.GetBoolean(reader.GetOrdinal("Activo")),
-                CreatedAt = reader.GetDateTime(reader.GetOrdinal("CreatedAt"))
-            });
-        }
-
-        return productos;
-    }
-
-    public Producto? ObtenerPorCodigo(string codigo)
+    public int InsertarVenta(Venta venta)
     {
         using var connection = new SqlConnection(SqlServerConnection.ConnectionString);
         using var command = new SqlCommand(
-            @"SELECT Id, Codigo, Nombre, Descripcion, CategoriaId, PrecioCompra, PrecioVenta, Stock, StockMinimo, Activo, CreatedAt
-              FROM dbo.Productos
-              WHERE Codigo = @Codigo AND Activo = 1;",
+            @"INSERT INTO dbo.Ventas (UsuarioId, ClienteId, NumeroDocumento, FechaVenta, SubTotal, Igv, Total, Estado, TipoComprobante, CreatedAt)
+              VALUES (@UsuarioId, @ClienteId, @NumeroDocumento, @FechaVenta, @SubTotal, @Igv, @Total, @Estado, @TipoComprobante, @CreatedAt);
+              SELECT SCOPE_IDENTITY();",
             connection);
 
-        command.Parameters.Add("@Codigo", SqlDbType.NVarChar, 50).Value = codigo;
+        command.Parameters.AddWithValue("@UsuarioId", venta.UsuarioId);
+        command.Parameters.AddWithValue("@ClienteId", venta.ClienteId ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("@NumeroDocumento", venta.NumeroDocumento ?? string.Empty);
+        command.Parameters.AddWithValue("@FechaVenta", venta.FechaVenta);
+        command.Parameters.AddWithValue("@SubTotal", venta.SubTotal);
+        command.Parameters.AddWithValue("@Igv", venta.Igv);
+        command.Parameters.AddWithValue("@Total", venta.Total);
+        command.Parameters.AddWithValue("@Estado", venta.Estado ?? "Pendiente");
+        command.Parameters.AddWithValue("@TipoComprobante", venta.TipoComprobante ?? "Factura");
+        command.Parameters.AddWithValue("@CreatedAt", DateTime.Now);
+
         connection.Open();
+        var result = command.ExecuteScalar();
 
-        using var reader = command.ExecuteReader();
-        if (!reader.Read()) return null;
-
-        return new Producto
-        {
-            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-            Codigo = reader.GetString(reader.GetOrdinal("Codigo")),
-            Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
-            Descripcion = reader.IsDBNull(reader.GetOrdinal("Descripcion")) ? null : reader.GetString(reader.GetOrdinal("Descripcion")),
-            CategoriaId = reader.GetInt32(reader.GetOrdinal("CategoriaId")),
-            PrecioCompra = reader.GetDecimal(reader.GetOrdinal("PrecioCompra")),
-            PrecioVenta = reader.GetDecimal(reader.GetOrdinal("PrecioVenta")),
-            Stock = reader.GetInt32(reader.GetOrdinal("Stock")),
-            StockMinimo = reader.GetInt32(reader.GetOrdinal("StockMinimo")),
-            Activo = reader.GetBoolean(reader.GetOrdinal("Activo")),
-            CreatedAt = reader.GetDateTime(reader.GetOrdinal("CreatedAt"))
-        };
+        return Convert.ToInt32(result);
     }
 }

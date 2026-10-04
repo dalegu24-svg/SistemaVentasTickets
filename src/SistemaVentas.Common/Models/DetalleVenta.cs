@@ -1,14 +1,11 @@
 namespace SistemaVentas.Common.Models;
 
-public class Producto : BaseEntity
+public class DetalleVenta : BaseEntity
 {
-    public string Codigo { get; set; } = string.Empty;
-    public string Nombre { get; set; } = string.Empty;
-    public string? Descripcion { get; set; }
-    public int CategoriaId { get; set; }
-    public decimal PrecioCompra { get; set; }
-    public decimal PrecioVenta { get; set; }
-    public int Stock { get; set; }
-    public int StockMinimo { get; set; }
-    public bool Activo { get; set; } = true;
+    public int VentaId { get; set; }
+    public int ProductoId { get; set; }
+    public int Cantidad { get; set; }
+    public decimal PrecioUnitario { get; set; }
+    public decimal Descuento { get; set; }
+    public decimal SubTotal { get; set; }
 }
