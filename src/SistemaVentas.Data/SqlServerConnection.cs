@@ -1,16 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
+namespace SistemaVentas.Data;
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
-  </ItemGroup>
+public static class SqlServerConnection
+{
+    public const string DefaultServer = "(localdb)\\MSSQLLocalDB";
+    public const string DefaultDatabase = "SistemaVentasDb";
 
-  <ItemGroup>
-    <ProjectReference Include="..\SistemaVentas.Common\SistemaVentas.Common.csproj" />
-  </ItemGroup>
-</Project>
+    public static string ConnectionString =>
+        $"Server={DefaultServer};Database={DefaultDatabase};Trusted_Connection=True;TrustServerCertificate=True;";
+
+    public static string GetConnectionString(
+        string server = DefaultServer,
+        string database = DefaultDatabase)
+    {
+        return $"Server={server};Database={database};Trusted_Connection=True;TrustServerCertificate=True;";
+    }
+}
