@@ -1,117 +1,29 @@
-using SistemaVentas.Common.Models;
-using SistemaVentas.Data.Repositories;
+# Fase 4: Módulo de Reportes
 
-namespace SistemaVentas.Business.Services;
+## Funcionalidades
 
-public class FacturaService
-{
-    private readonly VentaRepository _ventaRepository = new();
+- Reporte de ventas por fecha
+- Reporte de productos más vendidos
+- Resumen monetario del período consultado
+- Filtros por fecha
 
-    public Factura GenerarFactura(Venta venta, int ventaId)
-    {
-        if (venta is null)
-            throw new ArgumentNullException(nameof(venta));
+## Consultas usadas
 
-        if (ventaId <= 0)
-            throw new InvalidOperationException("El ID de la venta debe ser válido.");
+- `Ventas por fecha`:
+  consulta los movimientos de ventas con subtotal, IGV y total.
 
-        var numeroFactura = GenerarNumeroFactura(ventaId);
+- `Productos más vendidos`:
+  agrega la cantidad vendida por producto y el total acumulado.
 
-        var factura = new Factura
-        {
-            VentaId = ventaId,
-            NumeroFactura = numeroFactura,
-            FechaEmision = DateTime.Now,
-            SubTotal = venta.SubTotal,
-            Igv = venta.Igv,
-            Total = venta.Total,
-            Estado = "Emitida"
-        };
+## Integración
 
-        return factura;
-    }
+El botón `Reportes` en la pantalla principal abre la ventana de reportes.
 
-    public Ticket GenerarTicket(Venta venta, int ventaId, string nombreEmpresa = "Mi Punto de Venta", string ruc = "20123456789")
-    {
-        if (venta is null)
-            throw new ArgumentNullException(nameof(venta));
+## Mejoras futuras
 
-        if (ventaId <= 0)
-            throw new InvalidOperationException("El ID de la venta debe ser válido.");
+- Exportación a PDF
+- Exportación a Excel
+- Gráficos estadísticos
+- Dashboard principal con indicadores clave
+- Filtros por usuario y cliente
 
-        var numeroTicket = GenerarNumeroTicket(ventaId);
-        var textoTicket = GenerarTextoTicket(venta, numeroTicket, nombreEmpresa, ruc);
-
-        var ticket = new Ticket
-        {
-            VentaId = ventaId,
-            NumeroTicket = numeroTicket,
-            FechaEmision = DateTime.Now,
-            TextoTicket = textoTicket,
-            Impreso = false
-        };
-
-        return ticket;
-    }
-
-    private static string GenerarNumeroFactura(int ventaId)
-    {
-        return $"FAC-{DateTime.Now.Year}{DateTime.Now.Month:D2}{ventaId:D6}";
-    }
-
-    private static string GenerarNumeroTicket(int ventaId)
-    {
-        return $"TKT-{DateTime.Now.Year}{DateTime.Now.Month:D2}{ventaId:D6}";
-    }
-
-    private static string GenerarTextoTicket(Venta venta, string numeroTicket, string nombreEmpresa, string ruc)
-    {
-        var ticket = new System.Text.StringBuilder();
-        ticket.AppendLine("=" * 40);
-        ticket.AppendLine(nombreEmpresa.PadCenter(40));
-        ticket.AppendLine("=" * 40);
-        ticket.AppendLine();
-        ticket.AppendLine($"RUC: {ruc}");
-        ticket.AppendLine($"Ticket: {numeroTicket}");
-        ticket.AppendLine($"Fecha: {venta.FechaVenta:dd/MM/yyyy HH:mm:ss}");
-        ticket.AppendLine();
-        ticket.AppendLine("-" * 40);
-        ticket.AppendLine("DETALLE DE VENTA");
-        ticket.AppendLine("-" * 40);
-
-        if (venta.Detalles?.Count > 0)
-        {
-            foreach (var detalle in venta.Detalles)
-            {
-                ticket.AppendLine($"Producto: {detalle.ProductoId}");
-                ticket.AppendLine($"Cantidad: {detalle.Cantidad} x S/ {detalle.PrecioUnitario:F2}");
-                ticket.AppendLine($"Subtotal: S/ {detalle.SubTotal:F2}");
-                ticket.AppendLine();
-            }
-        }
-
-        ticket.AppendLine("=" * 40);
-        ticket.AppendLine($"Subtotal: S/ {venta.SubTotal:F2}");
-        ticket.AppendLine($"IGV (18%): S/ {venta.Igv:F2}");
-        ticket.AppendLine("=" * 40);
-        ticket.AppendLine($"TOTAL: S/ {venta.Total:F2}");
-        ticket.AppendLine("=" * 40);
-        ticket.AppendLine();
-        ticket.AppendLine("Gracias por su compra!");
-        ticket.AppendLine("Vuelva pronto!");
-        ticket.AppendLine();
-        ticket.AppendLine($"Emitido: {DateTime.Now:dd/MM/yyyy HH:mm:ss}");
-
-        return ticket.ToString();
-    }
-}
-
-public static class StringExtensions
-{
-    public static string PadCenter(this string str, int width)
-    {
-        if (string.IsNullOrEmpty(str)) return str;
-        int padding = (width - str.Length) / 2;
-        return str.PadLeft(str.Length + padding).PadRight(width);
-    }
-}
