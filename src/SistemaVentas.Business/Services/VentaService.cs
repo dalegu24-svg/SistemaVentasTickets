@@ -18,9 +18,17 @@ public class ProductoService
         return _productos;
     }
 
+    public Producto? ObtenerPorId(int id)
+    {
+        return _productos.FirstOrDefault(p => p.Id == id);
+    }
+
     public Producto? ObtenerPorCodigo(string codigo)
     {
-        return _productos.FirstOrDefault(p => p.Codigo.Equals(codigo, StringComparison.OrdinalIgnoreCase));
+        if (string.IsNullOrWhiteSpace(codigo))
+            return null;
+
+        return _productos.FirstOrDefault(p => p.Codigo.Equals(codigo.Trim(), StringComparison.OrdinalIgnoreCase));
     }
 
     public void RegistrarProducto(Producto producto)
