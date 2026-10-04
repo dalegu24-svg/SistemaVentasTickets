@@ -1,13 +1,14 @@
 namespace SistemaVentas.Common.Models;
 
-public class Cliente : BaseEntity
+public class Producto : BaseEntity
 {
+    public string Codigo { get; set; } = string.Empty;
     public string Nombre { get; set; } = string.Empty;
-    public string? Apellido { get; set; }
-    public string? Documento { get; set; }
-    public string? TipoDocumento { get; set; }
-    public string? Telefono { get; set; }
-    public string? Correo { get; set; }
-    public string? Direccion { get; set; }
+    public string? Descripcion { get; set; }
+    public int CategoriaId { get; set; }
+    public decimal PrecioCompra { get; set; }
+    public decimal PrecioVenta { get; set; }
+    public int Stock { get; set; }
+    public int StockMinimo { get; set; }
     public bool Activo { get; set; } = true;
 }

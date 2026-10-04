@@ -2,60 +2,45 @@ using SistemaVentas.Common.Models;
 
 namespace SistemaVentas.Business.Services;
 
-public class ProductoService
+public class VentaService
 {
-    private readonly List<Producto> _productos = new()
+    private readonly ProductoService _productoService = new();
+
+    public Venta CrearVenta(int usuarioId, int? clienteId, List<DetalleVenta> detalles, decimal igvPorcentaje = 18m)
     {
-        new Producto { Id = 1, Codigo = "B001", Nombre = "Agua Mineral 500ml", PrecioVenta = 3.00m, Stock = 40, CategoriaId = 1 },
-        new Producto { Id = 2, Codigo = "B002", Nombre = "Gaseosa Cola 600ml", PrecioVenta = 5.00m, Stock = 30, CategoriaId = 1 },
-        new Producto { Id = 3, Codigo = "S001", Nombre = "Chips de papa", PrecioVenta = 4.50m, Stock = 25, CategoriaId = 2 },
-        new Producto { Id = 4, Codigo = "L001", Nombre = "Detergente 1L", PrecioVenta = 9.00m, Stock = 18, CategoriaId = 3 },
-        new Producto { Id = 5, Codigo = "H001", Nombre = "Escoba", PrecioVenta = 12.00m, Stock = 12, CategoriaId = 4 }
-    };
+        if (detalles == null || detalles.Count == 0)
+            throw new InvalidOperationException("Debe agregar al menos un producto a la venta.");
 
-    public List<Producto> ObtenerProductos()
-    {
-        return _productos;
-    }
-
-    public Producto? ObtenerPorId(int id)
-    {
-        return _productos.FirstOrDefault(p => p.Id == id);
-    }
-
-    public Producto? ObtenerPorCodigo(string codigo)
-    {
-        if (string.IsNullOrWhiteSpace(codigo))
-            return null;
-
-        return _productos.FirstOrDefault(p => p.Codigo.Equals(codigo.Trim(), StringComparison.OrdinalIgnoreCase));
-    }
-
-    public void RegistrarProducto(Producto producto)
-    {
-        if (producto == null) throw new ArgumentNullException(nameof(producto));
-        if (string.IsNullOrWhiteSpace(producto.Nombre)) throw new InvalidOperationException("El nombre del producto es obligatorio.");
-
-        if (_productos.Any(p => p.Codigo == producto.Codigo && p.Id != producto.Id))
-            throw new InvalidOperationException("Ya existe un producto con ese código.");
-
-        if (producto.Id == 0)
+        var venta = new Venta
         {
-            producto.Id = _productos.Count + 1;
-            _productos.Add(producto);
-            return;
+            UsuarioId = usuarioId,
+            ClienteId = clienteId,
+            Estado = "Pendiente",
+            TipoComprobante = "Factura",
+            Detalles = detalles
+        };
+
+        foreach (var detalle in detalles)
+        {
+            var producto = _productoService.ObtenerPorId(detalle.ProductoId);
+            if (producto is null)
+                throw new InvalidOperationException($"El producto con Id {detalle.ProductoId} no existe.");
+
+            if (detalle.Cantidad <= 0)
+                throw new InvalidOperationException("La cantidad debe ser mayor que cero.");
+
+            if (detalle.Cantidad > producto.Stock)
+                throw new InvalidOperationException($"No hay stock suficiente para {producto.Nombre}.");
+
+            detalle.PrecioUnitario = producto.PrecioVenta;
+            detalle.SubTotal = detalle.Cantidad * detalle.PrecioUnitario;
+            venta.SubTotal += detalle.SubTotal;
         }
 
-        var item = _productos.FirstOrDefault(p => p.Id == producto.Id);
-        if (item is null) throw new InvalidOperationException("Producto no encontrado.");
+        venta.Igv = Math.Round(venta.SubTotal * (igvPorcentaje / 100m), 2);
+        venta.Total = venta.SubTotal + venta.Igv;
+        venta.NumeroDocumento = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
 
-        item.Codigo = producto.Codigo;
-        item.Nombre = producto.Nombre;
-        item.Descripcion = producto.Descripcion;
-        item.PrecioCompra = producto.PrecioCompra;
-        item.PrecioVenta = producto.PrecioVenta;
-        item.CategoriaId = producto.CategoriaId;
-        item.Stock = producto.Stock;
-        item.Activo = producto.Activo;
+        return venta;
     }
 }
